@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Webcam to ASCII</title>
+  <style>
+    body {
+      background: black;
+      color: white;
+      font-family: "Courier New", Courier, monospace;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+    }
+
+    video, canvas {
+      display: none;
+    }
+
+    pre {
+      font-family: "Courier New", Courier, monospace;
+      font-size: 4px;
+      line-height: 4px;
+      white-space: pre;
+      margin: 0;
+      letter-spacing: 0;
+    }
+  </style>
+</head>
+<body>
+
+<h1 style="margin-bottom: 10px;">Bem-vindo</h1>
+<h2 style="margin-bottom: 10px;">Webcam de Dados</h2>
+<video id="video" autoplay></video>
+<canvas id="canvas"></canvas>
+<pre id="ascii"></pre>
+
+<script>
+  const video = document.getElementById("video");
+  const canvas = document.getElementById("canvas");
+  const ascii = document.getElementById("ascii");
+  const ctx = canvas.getContext("2d");
+
+  const chars = "█▓▒░#W$9876543210?!abc;:+=-,._ ".split("");
+
+  const width = 160;
+  const height = 120;
+
+  canvas.width = width;
+  canvas.height = height;
+
+  navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
+    video.srcObject = stream;
+  });
+
+  function frameToAscii() {
+    ctx.drawImage(video, 0, 0, width, height);
+    const imageData = ctx.getImageData(0, 0, width, height);
+    let asciiImage = "";
+
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        const offset = (y * width + x) * 4;
+        const r = imageData.data[offset];
+        const g = imageData.data[offset + 1];
+        const b = imageData.data[offset + 2];
+        const brightness = (r + g + b) / 3;
+        const charIndex = Math.floor((brightness / 255) * (chars.length - 1));
+        asciiImage += chars[charIndex];
+      }
+      asciiImage += "\n";
+    }
+
+    ascii.textContent = asciiImage;
+    requestAnimationFrame(frameToAscii);
+  }
+
+  video.addEventListener("play", () => {
+    requestAnimationFrame(frameToAscii);
+  });
+</script>
+
+</body>
+</html>

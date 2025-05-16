@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>cobrinha</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      background: black;
+      color: white;
+      font-family: "Courier New", Courier, monospace;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    .cobra {
+      background: green;
+      width: 36px;
+      height: 36px;
+      position: absolute;
+    }
+
+    .comida {
+      background: red;
+      width: 36px;
+      height: 36px;
+      position: absolute;
+    }
+
+    .quadrado-disponivel{
+      width: 400px;
+      height: 400px;
+      background: black;
+      position: relative;
+      margin: auto;
+      border: 1px solid white;
+    }
+
+  </style>
+</head>
+<body>
+<h1>jogo da cobra</h1>
+<div id="game" class="quadrado-disponivel">
+  <div id="snake" class="cobra"></div>
+  <div id="food" class="comida"></div>
+</div>
+<script>
+  const game = document.getElementById('game');
+  const snake = document.getElementById('snake');
+  const food = document.getElementById('food');
+
+  const gridSize = 36;
+  const velocity = gridSize;
+  let direction = null;
+  let interval = null;
+
+  let posX = Math.floor((game.clientWidth / 4) / gridSize) * gridSize;
+  let posY = Math.floor((game.clientHeight / 2) / gridSize) * gridSize;
+
+  let snakeBody = [{ x: posX, y: posY }];
+
+  function drawSnake() {
+    document.querySelectorAll('.segment').forEach(e => e.remove());
+
+    for (let i = 1; i < snakeBody.length; i++) {
+      const segment = document.createElement("div");
+      segment.className = "segment";
+      segment.style.width = gridSize + "px";
+      segment.style.height = gridSize + "px";
+      segment.style.position = "absolute";
+      segment.style.background = "green";
+      segment.style.left = snakeBody[i].x + "px";
+      segment.style.top = snakeBody[i].y + "px";
+      game.appendChild(segment);
+    }
+
+
+    snake.style.left = snakeBody[0].x + "px";
+    snake.style.top = snakeBody[0].y + "px";
+  }
+
+  function moveSnakeAndGameLogic() {
+    const head = { ...snakeBody[0] };
+
+    if (direction === "up") head.y -= velocity;
+    else if (direction === "down") head.y += velocity;
+    else if (direction === "left") head.x -= velocity;
+    else if (direction === "right") head.x += velocity;
+    else return;
+
+    const limiteX = game.clientWidth - gridSize;
+    const limiteY = game.clientHeight - gridSize;
+
+    if (head.x < 0 || head.x > limiteX || head.y < 0 || head.y > limiteY) {
+      loseGame();
+      return;
+    }
+
+    for (let i = 0; i < snakeBody.length; i++) {
+      if (head.x === snakeBody[i].x && head.y === snakeBody[i].y) {
+        loseGame();
+        return;
+      }
+    }
+
+    snakeBody.unshift(head);
+
+    if (head.x === food.offsetLeft && head.y === food.offsetTop) {
+      foodPosition();
+    } else {
+      snakeBody.pop();
+    }
+
+    drawSnake();
+  }
+
+  function foodPosition() {
+    const maxX = Math.floor(game.clientWidth / gridSize);
+    const maxY = Math.floor(game.clientHeight / gridSize);
+
+    const x = Math.floor(Math.random() * maxX) * gridSize;
+    const y = Math.floor(Math.random() * maxY) * gridSize;
+
+    food.style.left = x + "px";
+    food.style.top = y + "px";
+  }
+
+  function loseGame() {
+    alert("Você perdeu!");
+    clearInterval(interval);
+    direction = null;
+    snakeBody = [{
+      x: Math.floor((game.clientWidth / 4) / gridSize) * gridSize,
+      y: Math.floor((game.clientHeight / 2) / gridSize) * gridSize
+    }];
+    drawSnake();
+    foodPosition();
+  }
+  document.addEventListener("keydown", function (event) {
+      clearInterval(interval);
+    const key = event.key.toLowerCase();
+
+    if (["w", "a", "s", "d"].includes(key) && direction !== key) {
+      clearInterval(interval);
+
+      switch (key) {
+        case "w":
+          direction = "up";
+          break;
+        case "s":
+          direction = "down";
+          break;
+        case "a":
+          direction = "left";
+          break;
+        case "d":
+          direction = "right";
+          break;
+      }
+        interval = setInterval(moveSnakeAndGameLogic, 150);
+    }
+  });
+
+</script>
+</body>
+</html>
